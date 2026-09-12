@@ -1,0 +1,1 @@
+- [ ] Make Market data, Model lab, and Performance sidebar views interactive
