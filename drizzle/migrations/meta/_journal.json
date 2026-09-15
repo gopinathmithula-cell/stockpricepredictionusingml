@@ -1,13 +1,5 @@
 {
   "version": "7",
   "dialect": "postgresql",
-  "entries": [
-    {
-      "idx": 0,
-      "version": "7",
-      "when": 1789455559518,
-      "tag": "0000_create_forecast_history",
-      "breakpoints": true
-    }
-  ]
+  "entries": []
 }

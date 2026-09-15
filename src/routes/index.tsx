@@ -1,6 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { useServerFn } from "@tanstack/react-start";
 import {
   Activity,
   ArrowDownRight,
@@ -40,8 +39,6 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { supabase } from "@/integrations/supabase/client";
-import { getMarketWorkspaceData, type InstrumentData, type MarketWorkspaceData, type ModelMetrics } from "@/lib/market-data.functions";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -65,8 +62,8 @@ export const Route = createFileRoute("/")({
 });
 
 type Range = "1M" | "6M" | "1Y" | "2Y";
-type Stock = "TCS.NS" | "AAPL" | "RELIANCE.NS" | "INFY.NS";
-type Model = "Linear Regression" | "LSTM Network" | "Random Forest";
+type Stock = "TCS.NS" | "AAPL" | "RELIANCE.NS";
+type Model = "Linear Regression" | "LSTM Network";
 type WorkspaceView = "Overview" | "Market data" | "Model lab" | "Performance";
 
 const stockInfo: Record<Stock, { name: string; exchange: string; price: number; change: number; forecast: number }> = {
@@ -122,16 +119,10 @@ function Index() {
   const [activeView, setActiveView] = useState<WorkspaceView>("Overview");
   const [mobileMenu, setMobileMenu] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [marketData, setMarketData] = useState<MarketWorkspaceData | null>(null);
-  const [dataError, setDataError] = useState<string | null>(null);
-  const [forecastHistory, setForecastHistory] = useState<ForecastHistoryRow[]>([]);
-  const fetchMarketData = useServerFn(getMarketWorkspaceData);
-  const selectedInstrument = marketData?.instruments[selectedStock];
-  const selected = selectedInstrument ?? stockInfo[selectedStock as keyof typeof stockInfo] ?? stockInfo["TCS.NS"];
+  const selected = stockInfo[selectedStock];
   const isPositive = selected.change >= 0;
-  const selectedMetrics = selectedInstrument?.metrics;
-  const confidence = selectedMetrics?.validationAccuracy ?? (model === "LSTM Network" ? 84.6 : 78.2);
-  const forecastDelta = selectedInstrument?.forecastDelta ?? ((selected.forecast - selected.price) / selected.price) * 100;
+  const confidence = model === "LSTM Network" ? 84.6 : 78.2;
+  const forecastDelta = ((selected.forecast - selected.price) / selected.price) * 100;
   const viewMeta: Record<WorkspaceView, { eyebrow: string; title: string }> = {
     Overview: { eyebrow: "Tuesday, June 24, 2025", title: "Prediction overview" },
     "Market data": { eyebrow: "Workspace / Market data", title: "Market data" },
@@ -140,38 +131,14 @@ function Index() {
   };
 
   const chartData = useMemo(() => {
-    if (selectedInstrument) return selectedInstrument.series;
     const scale = selected.price / 3842;
     return history.map((point) => ({ ...point, actual: Math.round(point.actual * scale), predicted: Math.round(point.predicted * scale) }));
-  }, [selected.price, selectedInstrument]);
+  }, [selected.price]);
 
   const refreshData = () => {
     setIsRefreshing(true);
-    void fetchMarketData({ data: { symbols: ["TCS.NS", "AAPL", "RELIANCE.NS", "INFY.NS"], range, model } })
-      .then((result) => {
-        setMarketData(result);
-        setDataError(null);
-      })
-      .catch(() => setDataError("Live market data could not be loaded. Try refreshing again."))
-      .finally(() => setIsRefreshing(false));
+    window.setTimeout(() => setIsRefreshing(false), 700);
   };
-
-  useEffect(() => { refreshData(); }, [range, model]);
-
-  useEffect(() => {
-    let cancelled = false;
-    void supabase.from("forecast_history").select("*").eq("symbol", selectedStock).eq("model", model).order("created_at", { ascending: false }).limit(20)
-      .then(({ data }) => { if (!cancelled) setForecastHistory((data ?? []) as ForecastHistoryRow[]); });
-    return () => { cancelled = true; };
-  }, [selectedStock, model, marketData?.fetchedAt]);
-
-  useEffect(() => {
-    if (!selectedInstrument) return;
-    const forecastDate = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
-    void supabase.from("forecast_history").insert({ symbol: selectedStock, model, range, forecast_price: selectedInstrument.forecast, last_price: selectedInstrument.lastPrice, forecast_delta: selectedInstrument.forecastDelta, validation_accuracy: selectedInstrument.metrics.validationAccuracy, mae: selectedInstrument.metrics.mae, rmse: selectedInstrument.metrics.rmse, r2: selectedInstrument.metrics.r2, forecast_for_date: forecastDate });
-  }, [selectedInstrument?.lastUpdated]);
-
-  const selectStock = (stock: Stock) => setSelectedStock(stock);
 
   return (
     <main className="min-h-screen bg-background text-foreground">

@@ -20,15 +20,13 @@ export type MarketPoint = {
 
 export type ModelMetrics = {
   trainingLoss: number;
-  validationLoss: number;
-  testLoss: number;
   validationAccuracy: number;
   mae: number;
   rmse: number;
   r2: number;
   directionalAccuracy: number;
   validationSamples: number;
-  lossHistory: Array<{ epoch: string; train: number; validation: number; test: number }>;
+  lossHistory: Array<{ epoch: string; loss: number }>;
 };
 
 export type InstrumentData = {
@@ -163,14 +161,10 @@ function calculateMetrics(closes: number[], model: ForecastModel): {
     if (index < 8) return null;
     return predictNext(closes.slice(0, index), model);
   });
-  const splitIndex = Math.max(8, Math.floor(closes.length * 0.6));
-  const testStart = Math.max(splitIndex + 1, Math.floor(closes.length * 0.85));
+  const splitIndex = Math.max(8, Math.floor(closes.length * 0.7));
   const validation = closes
     .map((actual, index) => ({ actual, predicted: predictions[index], index }))
-    .filter((point): point is { actual: number; predicted: number; index: number } => point.index >= splitIndex && point.index < testStart && point.predicted !== null);
-  const test = closes
-    .map((actual, index) => ({ actual, predicted: predictions[index], index }))
-    .filter((point): point is { actual: number; predicted: number; index: number } => point.index >= testStart && point.predicted !== null);
+    .filter((point): point is { actual: number; predicted: number; index: number } => point.index >= splitIndex && point.predicted !== null);
   const training = closes
     .map((actual, index) => ({ actual, predicted: predictions[index], index }))
     .filter((point): point is { actual: number; predicted: number; index: number } => point.index >= 8 && point.index < splitIndex && point.predicted !== null);
@@ -193,29 +187,18 @@ function calculateMetrics(closes: number[], model: ForecastModel): {
       ) * 100
     : 0;
   const trainingLoss = Math.sqrt(mean(training.map((point) => (point.predicted - point.actual) ** 2)));
-  const validationLoss = Math.sqrt(mean(validation.map((point) => (point.predicted - point.actual) ** 2)));
-  const testLoss = Math.sqrt(mean(test.map((point) => (point.predicted - point.actual) ** 2)));
   const lossHistory = Array.from({ length: 10 }, (_value, index) => {
     const end = Math.max(10, Math.floor((splitIndex * (index + 1)) / 10));
-    const trainWindow = closes
+    const window = closes
       .map((actual, pointIndex) => ({ actual, predicted: predictions[pointIndex], pointIndex }))
       .filter((point): point is { actual: number; predicted: number; pointIndex: number } => point.pointIndex >= 8 && point.pointIndex < end && point.predicted !== null);
-    const validationEnd = Math.max(splitIndex + 1, Math.floor(splitIndex + ((testStart - splitIndex) * (index + 1)) / 10));
-    const validationWindow = validation.filter((point) => point.index < validationEnd);
-    return {
-      epoch: `${index + 1}`,
-      train: round(Math.sqrt(mean(trainWindow.map((point) => (point.predicted - point.actual) ** 2))), 4),
-      validation: round(Math.sqrt(mean(validationWindow.map((point) => (point.predicted - point.actual) ** 2))), 4),
-      test: round(testLoss, 4),
-    };
+    return { epoch: `${index + 1}`, loss: round(Math.sqrt(mean(window.map((point) => (point.predicted - point.actual) ** 2))), 4) };
   });
 
   return {
     predictions,
     metrics: {
       trainingLoss: round(trainingLoss, 4),
-      validationLoss: round(validationLoss, 4),
-      testLoss: round(testLoss, 4),
       validationAccuracy: round(Math.max(0, Math.min(100, (1 - mape) * 100)), 2),
       mae: round(mae),
       rmse: round(rmse),
