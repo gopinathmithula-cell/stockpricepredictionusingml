@@ -28,7 +28,7 @@ export type ModelMetrics = {
   r2: number;
   directionalAccuracy: number;
   validationSamples: number;
-  lossHistory: Array<{ epoch: string; loss: number }>;
+  lossHistory: Array<{ epoch: string; train: number; validation: number; test: number }>;
 };
 
 export type InstrumentData = {
