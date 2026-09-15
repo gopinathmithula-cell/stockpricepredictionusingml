@@ -14,7 +14,60 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      forecast_history: {
+        Row: {
+          actual_price: number | null
+          actualized_at: string | null
+          created_at: string
+          forecast_delta: number
+          forecast_for_date: string
+          forecast_price: number
+          id: string
+          last_price: number
+          mae: number
+          model: string
+          r2: number
+          range: string
+          rmse: number
+          symbol: string
+          validation_accuracy: number
+        }
+        Insert: {
+          actual_price?: number | null
+          actualized_at?: string | null
+          created_at?: string
+          forecast_delta: number
+          forecast_for_date: string
+          forecast_price: number
+          id?: string
+          last_price: number
+          mae: number
+          model: string
+          r2: number
+          range: string
+          rmse: number
+          symbol: string
+          validation_accuracy: number
+        }
+        Update: {
+          actual_price?: number | null
+          actualized_at?: string | null
+          created_at?: string
+          forecast_delta?: number
+          forecast_for_date?: string
+          forecast_price?: number
+          id?: string
+          last_price?: number
+          mae?: number
+          model?: string
+          r2?: number
+          range?: string
+          rmse?: number
+          symbol?: string
+          validation_accuracy?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
