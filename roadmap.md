@@ -1,3 +1,1 @@
-- [x] Make Market data, Model lab, and Performance sidebar views interactive
-- [x] Connect real market prices and forecasts to the dashboard
-- [x] Add country-based stock monitoring with automatic and manual refresh
+- [ ] Make Market data, Model lab, and Performance sidebar views interactive
