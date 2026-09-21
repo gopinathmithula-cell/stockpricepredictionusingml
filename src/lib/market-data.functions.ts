@@ -71,6 +71,12 @@ const instrumentNames: Record<string, string> = {
   AAPL: "Apple Inc.",
   "RELIANCE.NS": "Reliance Industries",
   "INFY.NS": "Infosys Limited",
+  MSFT: "Microsoft Corporation",
+  GOOGL: "Alphabet Inc.",
+  "SHEL.L": "Shell plc",
+  "HSBA.L": "HSBC Holdings plc",
+  "7203.T": "Toyota Motor Corporation",
+  "6758.T": "Sony Group Corporation",
 };
 
 type YahooPayload = {
