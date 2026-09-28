@@ -180,8 +180,9 @@ function calculateMetrics(closes: number[], model: ForecastModel): {
   const directionalAccuracy = directionalPairs.length
     ? mean(
         directionalPairs.map((point) => {
-          const actualDirection = closes[point.index] - closes[point.index - 1];
-          const predictedDirection = point.predicted - closes[point.index - 1];
+          const previousClose = closes[point.index - 1] ?? point.actual;
+          const actualDirection = point.actual - previousClose;
+          const predictedDirection = point.predicted - previousClose;
           return Math.sign(actualDirection) === Math.sign(predictedDirection) ? 1 : 0;
         }),
       ) * 100
