@@ -1,1 +1,3 @@
-- [ ] Make Market data, Model lab, and Performance sidebar views interactive
+- [x] Make Market data, Model lab, and Performance sidebar views interactive
+- [x] Wire live yfinance-compatible data (refresh button, real prices, forecasts, metrics) into all views
+- [x] Create Tanglish project explanation PDF for the user
